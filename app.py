@@ -142,7 +142,7 @@ df["kode_kecamatan_bps"]=(
 )
 
 
-gdf["kode_kec"]=(
+gdf["kode_kecamatan_kemendagri"]=(
     gdf["kode_kec"]
     .astype(str)
 )
@@ -438,7 +438,7 @@ elif menu=="Peta ST-SAE":
 
     map_df=gdf.merge(
         data,
-        on="kode_kecamatan_bps",
+        on="kode_kecamatan_kemendagri",
         how="inner"
     )
 
