@@ -4,9 +4,9 @@ import geopandas as gpd
 import plotly.express as px
 
 
-# =====================================================
+# ==========================
 # CONFIG
-# =====================================================
+# ==========================
 
 st.set_page_config(
     page_title="ST-SAE Jawa Timur",
@@ -15,32 +15,58 @@ st.set_page_config(
 )
 
 
-# =====================================================
-# STYLE
-# =====================================================
+# ==========================
+# CSS STYLE
+# ==========================
 
 st.markdown(
 """
 <style>
 
-.main{
-    background-color:#FAFAFA;
+body {
+    background-color:#F7F9FC;
 }
 
-h1{
+
+.main-title {
+    font-size:40px;
+    font-weight:700;
     color:#17365D;
 }
 
-h2{
-    color:#1F4E79;
+
+.subtitle {
+    font-size:18px;
+    color:#555;
 }
 
-[data-testid="metric-container"]{
+
+.card {
+
     background:white;
-    border-radius:10px;
-    padding:15px;
-    box-shadow:0px 2px 8px #ddd;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:
+    0px 4px 12px rgba(0,0,0,0.08);
+
 }
+
+
+div[data-testid="metric-container"] {
+
+background:white;
+padding:15px;
+border-radius:12px;
+
+}
+
+
+.stTabs [data-baseweb="tab"] {
+
+font-size:16px;
+
+}
+
 
 </style>
 """,
@@ -49,9 +75,9 @@ unsafe_allow_html=True
 
 
 
-# =====================================================
+# ==========================
 # LOAD DATA
-# =====================================================
+# ==========================
 
 @st.cache_data
 def load_data():
@@ -60,17 +86,16 @@ def load_data():
         "data/hasil_estimasi_eblup_kecamatan.csv"
     )
 
-    ringkasan = pd.read_csv(
-        "data/ringkasan_ST_SAE_per_kecamatan.csv"
-    )
 
     model = pd.read_csv(
         "data/perbandingan_model_SAE.csv"
     )
 
+
     akurasi = pd.read_csv(
         "data/ringkasan_akurasi_model_SAE.csv"
     )
+
 
     moran = pd.read_csv(
         "data/tabel_indeks_moran_panel_2018_2025.csv"
@@ -79,7 +104,6 @@ def load_data():
 
     return (
         hasil,
-        ringkasan,
         model,
         akurasi,
         moran
@@ -95,7 +119,6 @@ def load_map():
     )
 
 
-    # kode shp
     gdf["kode_kec"] = (
         gdf["kode_kec"]
         .astype(str)
@@ -106,16 +129,15 @@ def load_map():
 
 
 
-hasil, ringkasan, model, akurasi, moran = load_data()
+hasil, model, akurasi, moran = load_data()
 
 gdf = load_map()
 
 
 
-# =====================================================
-# HARMONISASI KODE WILAYAH
-# =====================================================
-
+# ==========================
+# CLEAN DATA
+# ==========================
 
 hasil["kode_kecamatan_kemendagri"] = (
     hasil["kode_kecamatan_kemendagri"]
@@ -123,16 +145,7 @@ hasil["kode_kecamatan_kemendagri"] = (
 )
 
 
-gdf["kode_kec"] = (
-    gdf["kode_kec"]
-    .astype(str)
-)
-
-
-
-# =====================================================
-# GABUNGKAN SHP + HASIL ESTIMASI
-# =====================================================
+# merge peta
 
 map_data = gdf.merge(
     hasil,
@@ -141,432 +154,286 @@ map_data = gdf.merge(
     how="left"
 )
 
+def anchor(name):
 
+    st.markdown(
+        f"""
+        <div id="{name}"></div>
+        """,
+        unsafe_allow_html=True
+    )
 
-# =====================================================
-# HEADER
-# =====================================================
-
-
-st.title(
+st.markdown(
 """
-📊 Spatial Temporal Small Area Estimation
-Jawa Timur
-"""
+<style>
+
+.navbar {
+
+background-color:#17365D;
+
+padding:15px;
+
+border-radius:10px;
+
+position:sticky;
+
+top:0;
+
+z-index:999;
+
+}
+
+
+.navbar a {
+
+color:white;
+
+text-decoration:none;
+
+margin-right:25px;
+
+font-weight:600;
+
+}
+
+</style>
+
+
+<div class="navbar">
+
+<a href="#beranda">
+Beranda
+</a>
+
+
+<a href="#metodologi">
+Metodologi
+</a>
+
+
+<a href="#direct">
+Direct Estimate
+</a>
+
+
+<a href="#stsae">
+ST-SAE
+</a>
+
+
+<a href="#evaluasi">
+Evaluasi
+</a>
+
+
+<a href="#eksplorasi">
+Eksplorasi
+</a>
+
+
+</div>
+
+""",
+unsafe_allow_html=True
 )
+
+anchor("beranda")
 
 
 st.markdown(
 """
-Aplikasi ini menyajikan hasil penelitian estimasi
-pengeluaran per kapita tingkat kecamatan menggunakan
-pendekatan **Spatial Temporal Small Area Estimation (ST-SAE)**.
+<div class="main-title">
 
-Periode:
-**2018–2025**
+Spatial Temporal Small Area Estimation
+Jawa Timur
 
-Wilayah:
-**Kecamatan Provinsi Jawa Timur**
-"""
+</div>
+
+<div class="subtitle">
+
+Estimasi Pengeluaran Per Kapita Kecamatan
+Tahun 2018-2025
+
+</div>
+
+""",
+unsafe_allow_html=True
 )
 
 
+st.write("")
 
-# =====================================================
-# SIDEBAR
-# =====================================================
-
-menu = st.sidebar.radio(
-    "Menu",
-    [
-        "Beranda",
-        "Metodologi",
-        "Direct Estimate",
-        "Analisis Spasial",
-        "Model ST-SAE",
-        "Peta EBLUP",
-        "Evaluasi Model",
-        "Eksplorasi Kecamatan"
-    ]
-)
+col1,col2,col3,col4 = st.columns(4)
 
 
+with col1:
 
-# =====================================================
-# BERANDA
-# =====================================================
-
-if menu=="Beranda":
-
-
-    c1,c2,c3,c4 = st.columns(4)
-
-
-    c1.metric(
-        "Jumlah Kecamatan",
-        "661"
+    st.metric(
+        "Wilayah",
+        "661 Kecamatan"
     )
 
-    c2.metric(
+
+with col2:
+
+    st.metric(
         "Periode",
         "2018-2025"
     )
 
-    c3.metric(
+
+with col3:
+
+    st.metric(
         "Model",
         "ST-SAE"
     )
 
-    c4.metric(
-        "Pendekatan",
+
+with col4:
+
+    st.metric(
+        "Estimator",
         "EBLUP"
     )
 
-
-
-    st.subheader(
-        "Tujuan Penelitian"
-    )
-
-
-    st.write(
+st.markdown(
 """
-1. Menghasilkan direct estimate pengeluaran per kapita.
-2. Membentuk model Spatial Temporal SAE.
-3. Mengevaluasi peningkatan akurasi menggunakan MSE dan RRMSE.
+## Latar Belakang
+
+Estimasi pengeluaran per kapita pada tingkat kecamatan
+memiliki tantangan karena keterbatasan ukuran sampel survei.
+
+Pendekatan Small Area Estimation digunakan dengan
+memanfaatkan informasi tambahan berupa:
+
+- karakteristik lingkungan,
+- sosial,
+- ekonomi,
+- infrastruktur,
+
+serta mempertimbangkan hubungan spasial dan temporal
+antar wilayah.
+
+Penelitian ini menghasilkan estimasi pengeluaran per kapita
+kecamatan menggunakan model Spatial Temporal SAE.
+"""
+)
+
+st.divider()
+
+anchor("metodologi")
+
+
+st.header(
+    "Metodologi Penelitian"
+)
+
+m1,m2,m3,m4,m5 = st.columns(5)
+
+
+m1.info(
+"""
+Data
+
+BPS + Auxiliary
 """
 )
 
 
-
-# =====================================================
-# METODOLOGI
-# =====================================================
-
-
-elif menu=="Metodologi":
-
-
-    st.header(
-        "Metodologi ST-SAE"
-    )
-
-
-    st.markdown(
+m2.info(
 """
-### 1. Direct Estimate
+Direct Estimate
 
-Estimasi awal diperoleh dari data BPS.
-
-
-### 2. Auxiliary Variables
-
-Model memanfaatkan informasi tambahan:
-
-- NTL
-- LST
-- NDVI
-- NDBI
-- Pendidikan
-- Kesehatan
-- Ekonomi
-- Listrik
-
-
-### 3. Spatial Temporal SAE
-
-Model:
-
-\[
-y_{it}=X_{it}\\beta+u_{it}+e_{it}
-\]
-
-
-Komponen random effect:
-
-\[
-u_t=\\rho Wu_t+\\lambda u_{t-1}+v_t
-\]
-
-
-### 4. Estimasi
-
-Parameter diestimasi menggunakan REML.
-
-
-### 5. Prediksi
-
-Estimator akhir:
-
-\[
-EBLUP=X\\hat{\\beta}+\\hat{u}
-\]
-
-
-### 6. Evaluasi
-
-Menggunakan:
-
-- MSE
-- RRMSE
-
+Baseline
 """
 )
 
 
+m3.info(
+"""
+Spatial
 
-# =====================================================
-# DIRECT ESTIMATE
-# =====================================================
+Queen Contiguity
+"""
+)
 
 
-elif menu=="Direct Estimate":
+m4.info(
+"""
+Temporal
 
+Time Effect
+"""
+)
 
-    st.header(
-        "Direct Estimate BPS"
-    )
 
+m5.success(
+"""
+EBLUP
 
-    tahun = st.selectbox(
-        "Pilih Tahun",
-        sorted(
-            hasil["tahun"].unique()
-        )
-    )
+ST-SAE
+"""
+)
 
+st.latex(
+r"""
+y_{it}=X_{it}\beta+u_{it}+e_{it}
+"""
+)
 
-    temp = hasil[
-        hasil["tahun"]==tahun
-    ]
+st.markdown(
+"""
+Model ST-SAE menggabungkan:
 
+- fixed effect dari auxiliary variables,
+- spatial random effect,
+- temporal random effect,
+- sampling error.
 
-    c1,c2,c3=st.columns(3)
+Estimator akhir diperoleh menggunakan EBLUP.
+"""
+)
 
+st.subheader(
+"Komponen Model"
+)
 
-    c1.metric(
-        "Jumlah Kecamatan",
-        temp.shape[0]
-    )
+c1,c2,c3 = st.columns(3)
 
 
-    c2.metric(
-        "Mean Direct",
-        round(
-            temp["pengeluaran_mean"].mean()
-        )
-    )
+c1.success(
+"""
+### Spatial
 
+Menggunakan matriks bobot Queen Contiguity.
 
-    c3.metric(
-        "Mean EBLUP",
-        round(
-            temp["EBLUP_ST"].mean()
-        )
-    )
+Parameter:
+ρ
+"""
+)
 
 
-    fig=px.scatter(
-        temp,
-        x="pengeluaran_mean",
-        y="EBLUP_ST",
-        hover_name="kecamata",
-        title="Direct Estimate vs EBLUP"
-    )
+c2.warning(
+"""
+### Temporal
 
+Hubungan antar tahun.
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+Parameter:
+λ
+"""
+)
 
 
+c3.info(
+"""
+### Estimasi
 
-# =====================================================
-# SPASIAL
-# =====================================================
+REML + GLS + BLUP
 
+Output:
+EBLUP
+"""
+)
 
-elif menu=="Analisis Spasial":
-
-
-    st.header(
-        "Analisis Spasial"
-    )
-
-
-    st.dataframe(
-        moran
-    )
-
-
-
-# =====================================================
-# MODEL
-# =====================================================
-
-
-elif menu=="Model ST-SAE":
-
-
-    st.header(
-        "Model ST-SAE"
-    )
-
-
-    st.dataframe(
-        model
-    )
-
-
-
-# =====================================================
-# PETA EBLUP
-# =====================================================
-
-
-elif menu=="Peta EBLUP":
-
-
-    st.header(
-        "Peta Estimasi ST-SAE"
-    )
-
-
-    pilihan = st.radio(
-        "Tampilan",
-        [
-            "Satu Tahun",
-            "Keseluruhan Tahun"
-        ]
-    )
-
-
-
-    if pilihan=="Satu Tahun":
-
-
-        tahun = st.selectbox(
-            "Pilih Tahun",
-            sorted(
-                hasil["tahun"].unique()
-            )
-        )
-
-
-        data_peta = map_data[
-            map_data["tahun"]==tahun
-        ]
-
-
-        nilai = "EBLUP_ST"
-
-
-
-    else:
-
-
-        data_peta = (
-            map_data
-            .groupby(
-                [
-                    "kode_kec",
-                    "kecamata",
-                    "geometry"
-                ],
-                as_index=False
-            )
-            .agg(
-                EBLUP_ST=
-                ("EBLUP_ST","mean")
-            )
-        )
-
-
-        nilai="EBLUP_ST"
-
-
-
-    fig = px.choropleth_mapbox(
-        data_peta,
-        geojson=data_peta.geometry,
-        locations=data_peta.index,
-        color=nilai,
-        hover_name="kecamata",
-        mapbox_style="carto-positron",
-        zoom=7,
-        center={
-            "lat":-7.5,
-            "lon":112.5
-        }
-    )
-
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-
-
-# =====================================================
-# EVALUASI
-# =====================================================
-
-
-elif menu=="Evaluasi Model":
-
-
-    st.header(
-        "Evaluasi Akurasi"
-    )
-
-
-    st.dataframe(
-        akurasi
-    )
-
-
-
-    fig=px.bar(
-        akurasi,
-        x="Model",
-        y="RRMSE"
-    )
-
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-
-
-# =====================================================
-# EKSPLORASI
-# =====================================================
-
-
-elif menu=="Eksplorasi Kecamatan":
-
-
-    st.header(
-        "Eksplorasi Kecamatan"
-    )
-
-
-    kec = st.selectbox(
-        "Pilih Kecamatan",
-        sorted(
-            hasil["kecamata"]
-            .dropna()
-            .unique()
-        )
-    )
-
-
-    st.dataframe(
-        hasil[
-            hasil["kecamata"]==kec
-        ]
-    )
