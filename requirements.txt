@@ -1,7 +1,11 @@
 streamlit
 pandas
-plotly
 numpy
 geopandas
-pyogrio
+folium
+streamlit-folium
+plotly
+matplotlib
+seaborn
 shapely
+pyogrio
