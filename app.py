@@ -22,11 +22,9 @@ st.set_page_config(
 st.markdown(
 """
 <style>
-
 body {
     background-color:#F7F9FC;
 }
-
 
 .main-title {
     font-size:40px;
@@ -34,12 +32,10 @@ body {
     color:#17365D;
 }
 
-
 .subtitle {
     font-size:18px;
     color:#555;
 }
-
 
 .card {
 
@@ -51,7 +47,6 @@ body {
 
 }
 
-
 div[data-testid="metric-container"] {
 
 background:white;
@@ -60,19 +55,14 @@ border-radius:12px;
 
 }
 
-
 .stTabs [data-baseweb="tab"] {
-
 font-size:16px;
-
 }
-
 
 </style>
 """,
 unsafe_allow_html=True
 )
-
 
 
 # ==========================
@@ -436,4 +426,580 @@ Output:
 EBLUP
 """
 )
+
+# =====================================================
+# 3. DIRECT ESTIMATE
+# =====================================================
+
+st.divider()
+
+anchor("direct")
+
+st.header(
+    "1. Direct Estimate"
+)
+
+st.markdown(
+"""
+Direct estimate digunakan sebagai estimasi awal pengeluaran
+per kapita pada tingkat kecamatan. Hasil ini menjadi baseline
+sebelum dilakukan pemodelan Spatial Temporal Small Area
+Estimation (ST-SAE).
+"""
+)
+
+
+# -----------------------------------------------------
+# PILIHAN TAMPILAN
+# -----------------------------------------------------
+
+mode_direct = st.radio(
+    "Tampilan hasil direct estimate",
+    [
+        "Satu Tahun",
+        "Keseluruhan Tahun"
+    ],
+    horizontal=True,
+    key="mode_direct"
+)
+
+
+# -----------------------------------------------------
+# SATU TAHUN
+# -----------------------------------------------------
+
+if mode_direct == "Satu Tahun":
+
+    tahun_direct = st.selectbox(
+        "Pilih Tahun",
+        sorted(
+            hasil["tahun"].unique()
+        ),
+        key="tahun_direct"
+    )
+
+
+    data_direct = hasil[
+        hasil["tahun"] == tahun_direct
+    ].copy()
+
+
+    # ---------------------------------------------
+    # KPI
+    # ---------------------------------------------
+
+    c1, c2, c3, c4 = st.columns(4)
+
+
+    with c1:
+
+        st.metric(
+            "Jumlah Kecamatan",
+            f"{data_direct['kode_kecamatan_kemendagri'].nunique():,}"
+        )
+
+
+    with c2:
+
+        st.metric(
+            "Rata-rata Direct Estimate",
+            f"Rp {data_direct['pengeluaran_mean'].mean():,.0f}"
+        )
+
+
+    with c3:
+
+        st.metric(
+            "Median Direct Estimate",
+            f"Rp {data_direct['pengeluaran_mean'].median():,.0f}"
+        )
+
+
+    with c4:
+
+        st.metric(
+            "Rata-rata CV",
+            f"{data_direct['CV...11'].mean():.2f}%"
+        )
+
+
+    # ---------------------------------------------
+    # DISTRIBUSI
+    # ---------------------------------------------
+
+    st.subheader(
+        "Distribusi Pengeluaran Per Kapita"
+    )
+
+
+    fig_direct = px.histogram(
+        data_direct,
+        x="pengeluaran_mean",
+        nbins=30,
+        title=(
+            f"Distribusi Direct Estimate "
+            f"Tahun {tahun_direct}"
+        ),
+        labels={
+            "pengeluaran_mean":
+            "Pengeluaran Per Kapita"
+        }
+    )
+
+
+    fig_direct.update_layout(
+        template="plotly_white"
+    )
+
+
+    st.plotly_chart(
+        fig_direct,
+        use_container_width=True
+    )
+
+
+    # ---------------------------------------------
+    # TABEL
+    # ---------------------------------------------
+
+    st.subheader(
+        "Ringkasan Direct Estimate"
+    )
+
+
+    tabel_direct = data_direct[
+        [
+            "kode_kecamatan_bps",
+            "nama_kecamatan_bps",
+            "nama_kecamatan_kemendagri",
+            "pengeluaran_mean",
+            "CV...11",
+            "RSE...12"
+        ]
+    ].copy()
+
+
+    tabel_direct = (
+        tabel_direct
+        .sort_values(
+            "pengeluaran_mean",
+            ascending=False
+        )
+    )
+
+
+    st.dataframe(
+        tabel_direct,
+        use_container_width=True,
+        hide_index=True
+    )
+
+
+
+# -----------------------------------------------------
+# KESELURUHAN TAHUN
+# -----------------------------------------------------
+
+else:
+
+    direct_summary = (
+        hasil
+        .groupby("tahun")
+        .agg(
+            mean_direct=(
+                "pengeluaran_mean",
+                "mean"
+            ),
+
+            median_direct=(
+                "pengeluaran_mean",
+                "median"
+            ),
+
+            mean_cv=(
+                "CV...11",
+                "mean"
+            )
+        )
+        .reset_index()
+    )
+
+
+    st.subheader(
+        "Perkembangan Direct Estimate 2018–2025"
+    )
+
+
+    fig_trend_direct = px.line(
+        direct_summary,
+        x="tahun",
+        y="mean_direct",
+        markers=True,
+        title=(
+            "Rata-rata Pengeluaran Per Kapita "
+            "Direct Estimate"
+        ),
+        labels={
+            "tahun": "Tahun",
+            "mean_direct":
+            "Rata-rata Pengeluaran Per Kapita"
+        }
+    )
+
+
+    fig_trend_direct.update_layout(
+        template="plotly_white"
+    )
+
+
+    st.plotly_chart(
+        fig_trend_direct,
+        use_container_width=True
+    )
+
+
+    st.subheader(
+        "Perkembangan Koefisien Variasi"
+    )
+
+
+    fig_cv = px.line(
+        direct_summary,
+        x="tahun",
+        y="mean_cv",
+        markers=True,
+        title="Rata-rata CV Direct Estimate",
+        labels={
+            "tahun": "Tahun",
+            "mean_cv": "CV (%)"
+        }
+    )
+
+
+    fig_cv.update_layout(
+        template="plotly_white"
+    )
+
+
+    st.plotly_chart(
+        fig_cv,
+        use_container_width=True
+    )
+
+
+    st.dataframe(
+        direct_summary,
+        use_container_width=True,
+        hide_index=True
+    )
+
+# =====================================================
+# DIRECT VS EBLUP
+# =====================================================
+
+st.subheader(
+    "Direct Estimate dan ST-SAE EBLUP"
+)
+
+st.markdown(
+"""
+Perbandingan ini menunjukkan perubahan estimasi setelah
+informasi auxiliary variables serta struktur spasial-temporal
+dimasukkan ke dalam model.
+"""
+)
+
+
+tahun_compare = st.selectbox(
+    "Pilih Tahun Perbandingan",
+    sorted(
+        hasil["tahun"].unique()
+    ),
+    key="tahun_compare"
+)
+
+
+data_compare = hasil[
+    hasil["tahun"] == tahun_compare
+].copy()
+
+
+fig_compare = px.scatter(
+    data_compare,
+    x="pengeluaran_mean",
+    y="eblup_spatiotemporal",
+    hover_name="nama_kecamatan_kemendagri",
+    hover_data={
+        "pengeluaran_mean": ":,.0f",
+        "eblup_spatiotemporal": ":,.0f",
+        "rrmse_st": ":.4f"
+    },
+    labels={
+        "pengeluaran_mean":
+        "Direct Estimate",
+
+        "eblup_spatiotemporal":
+        "ST-SAE EBLUP",
+
+        "rrmse_st":
+        "RRMSE ST-SAE"
+    },
+    title=(
+        f"Direct Estimate vs ST-SAE "
+        f"Tahun {tahun_compare}"
+    )
+)
+
+
+# garis y = x
+
+min_value = min(
+    data_compare["pengeluaran_mean"].min(),
+    data_compare["eblup_spatiotemporal"].min()
+)
+
+
+max_value = max(
+    data_compare["pengeluaran_mean"].max(),
+    data_compare["eblup_spatiotemporal"].max()
+)
+
+
+fig_compare.add_shape(
+    type="line",
+    x0=min_value,
+    y0=min_value,
+    x1=max_value,
+    y1=max_value,
+    line=dict(
+        dash="dash"
+    )
+)
+
+
+fig_compare.update_layout(
+    template="plotly_white"
+)
+
+
+st.plotly_chart(
+    fig_compare,
+    use_container_width=True
+)
+
+# =====================================================
+# TREND DIRECT VS EBLUP
+# =====================================================
+
+st.subheader(
+    "Tren Direct Estimate dan ST-SAE"
+)
+
+
+trend_st = (
+    hasil
+    .groupby("tahun")
+    .agg(
+        direct=(
+            "pengeluaran_mean",
+            "mean"
+        ),
+
+        eblup=(
+            "eblup_spatiotemporal",
+            "mean"
+        )
+    )
+    .reset_index()
+)
+
+
+fig_trend_st = px.line(
+    trend_st,
+    x="tahun",
+    y=[
+        "direct",
+        "eblup"
+    ],
+    markers=True,
+    labels={
+        "tahun": "Tahun",
+        "value": "Pengeluaran Per Kapita",
+        "variable": "Estimasi"
+    },
+    title=(
+        "Perbandingan Tren Direct Estimate "
+        "dan ST-SAE EBLUP"
+    )
+)
+
+
+fig_trend_st.update_layout(
+    template="plotly_white"
+)
+
+
+st.plotly_chart(
+    fig_trend_st,
+    use_container_width=True
+)
+
+# =====================================================
+# 4. PETA ST-SAE
+# =====================================================
+
+st.divider()
+
+anchor("stsae")
+
+st.header(
+    "2. Hasil Estimasi Spatial Temporal SAE"
+)
+
+st.markdown(
+"""
+Peta berikut menunjukkan distribusi estimasi pengeluaran
+per kapita berdasarkan hasil ST-SAE EBLUP pada tingkat
+kecamatan.
+"""
+)
+
+map_mode = st.radio(
+    "Mode peta",
+    [
+        "Satu Tahun",
+        "Rata-rata 2018–2025"
+    ],
+    horizontal=True,
+    key="map_mode"
+)
+
+if map_mode == "Satu Tahun":
+
+    tahun_map = st.selectbox(
+        "Pilih Tahun Peta",
+        sorted(
+            hasil["tahun"].unique()
+        ),
+        key="tahun_map"
+    )
+
+
+    map_values = map_data[
+        map_data["tahun"] == tahun_map
+    ].copy()
+
+else:
+
+    map_values = (
+        map_data
+        .groupby(
+            [
+                "kode_kec",
+                "kecamata",
+                "kab_kota",
+                "provinsi",
+                "geometry"
+            ],
+            as_index=False
+        )
+        .agg(
+            eblup_spatiotemporal=(
+                "eblup_spatiotemporal",
+                "mean"
+            ),
+
+            pengeluaran_mean=(
+                "pengeluaran_mean",
+                "mean"
+            ),
+
+            rrmse_st=(
+                "rrmse_st",
+                "mean"
+            )
+        )
+    )
+
+# =====================================================
+# MAP
+# =====================================================
+
+if not map_values.empty:
+
+    fig_map = px.choropleth_map(
+        map_values,
+        geojson=map_values.geometry.__geo_interface__,
+        locations=map_values.index,
+        color="eblup_spatiotemporal",
+        hover_name="kecamata",
+        hover_data={
+            "kab_kota": True,
+            "provinsi": True,
+            "pengeluaran_mean": ":,.0f",
+            "eblup_spatiotemporal": ":,.0f",
+            "rrmse_st": ":.4f"
+        },
+        color_continuous_scale="Viridis",
+        map_style="carto-positron",
+        zoom=6.7,
+        center={
+            "lat": -7.75,
+            "lon": 112.5
+        },
+        labels={
+            "eblup_spatiotemporal":
+            "ST-SAE EBLUP"
+        }
+    )
+
+
+    fig_map.update_layout(
+        height=650,
+        margin={
+            "r":0,
+            "t":40,
+            "l":0,
+            "b":0
+        }
+    )
+
+
+    st.plotly_chart(
+        fig_map,
+        use_container_width=True
+    )
+
+else:
+
+    st.warning(
+        "Tidak terdapat data untuk ditampilkan."
+    )
+
+@st.cache_data
+def load_map():
+
+    gdf = gpd.read_file(
+        "data/kecamatan_jatim.zip"
+    )
+
+    gdf["kode_kec"] = (
+        gdf["kode_kec"]
+        .astype(str)
+        .str.strip()
+    )
+
+    if gdf.crs is None:
+
+        gdf = gdf.set_crs(
+            "EPSG:4326"
+        )
+
+    else:
+
+        gdf = gdf.to_crs(
+            "EPSG:4326"
+        )
+
+    return gdf
 
