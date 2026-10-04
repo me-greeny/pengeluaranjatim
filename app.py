@@ -28,57 +28,39 @@ st.markdown(
 """
 <style>
 
-body {
-    background-color:#FAFAF8;
-}
-
-
+/* Background */
 .main {
     background-color:#FAFAF8;
 }
 
 
-h1,h2,h3,h4 {
-    color:#111827;
+/* Hide Streamlit menu */
+#MainMenu {
+    visibility:hidden;
 }
 
 
-p,span,div {
-    color:#111827;
+/* Hide footer */
+footer {
+    visibility:hidden;
 }
 
 
-.metric-card {
-
-background:white;
-
-padding:20px;
-
-border-radius:15px;
-
-box-shadow:
-0 4px 12px rgba(0,0,0,0.08);
-
-text-align:center;
-
+/* Hide top toolbar */
+[data-testid="stToolbar"] {
+    visibility:hidden;
 }
 
 
-.title-box {
+/* Hide deploy decoration */
+[data-testid="stDecoration"] {
+    display:none;
+}
 
-background:
-linear-gradient(
-135deg,
-#1D4ED8,
-#0F766E
-);
 
-padding:35px;
-
-border-radius:20px;
-
-color:white;
-
+/* Hide status widget */
+[data-testid="stStatusWidget"] {
+    visibility:hidden;
 }
 
 
@@ -87,7 +69,79 @@ color:white;
 unsafe_allow_html=True
 )
 
+st.markdown(
+"""
+<div class="navbar">
 
+<a href="#beranda">
+Beranda
+</a>
+
+<a href="#metodologi">
+Metodologi
+</a>
+
+<a href="#data">
+Data
+</a>
+
+<a href="#peta">
+Peta
+</a>
+
+<a href="#evaluasi">
+Evaluasi
+</a>
+
+<a href="#kesimpulan">
+Kesimpulan
+</a>
+
+</div>
+""",
+unsafe_allow_html=True
+)
+
+.navbar {
+
+background:white;
+
+padding:15px;
+
+border-radius:15px;
+
+box-shadow:
+0 3px 10px rgba(0,0,0,0.08);
+
+display:flex;
+
+gap:25px;
+
+position:sticky;
+
+top:0;
+
+z-index:999;
+
+}
+
+
+.navbar a {
+
+color:#1D4ED8;
+
+font-weight:600;
+
+text-decoration:none;
+
+}
+
+
+.navbar a:hover {
+
+color:#0F766E;
+
+}
 
 # =====================================================
 # LOAD DATA
@@ -136,15 +190,17 @@ df["growth_ST"]=(
 # =====================================================
 
 
-df["kode_kecamatan_bps"]=(
-    df["kode_kecamatan_bps"]
+df["kode_kecamatan_kemendagri"]=(
+    df["kode_kecamatan_kemendagri"]
     .astype(str)
+    .str.strip()
 )
 
 
 gdf["kode_kecamatan_kemendagri"]=(
     gdf["kode_kec"]
     .astype(str)
+    .str.strip()
 )
 
 
@@ -233,7 +289,8 @@ menu=st.sidebar.radio(
     "Ranking Wilayah",
     "Download Data",
     "Kesimpulan"
-    ]
+    ],
+    horizontal=True
 )
 
 
@@ -247,24 +304,16 @@ menu=st.sidebar.radio(
 if menu=="Beranda":
 
 
-    st.markdown(
-    """
-    <div class="title-box">
-
-    <h1>
-    Spatio-Temporal Small Area Estimation
-    </h1>
-
-    <h3>
-    Estimasi Rata-rata Pengeluaran Per Kapita
-    Tingkat Kecamatan Jawa Timur
-    Tahun 2018-2025
-    </h3>
-
-    </div>
-
+   st.markdown(
+       """
+    <a id="beranda"></a>
     """,
     unsafe_allow_html=True
+    )
+
+
+    st.title(
+    "ST-SAE Jawa Timur"
     )
 
 
@@ -318,6 +367,13 @@ if menu=="Beranda":
     )
 
 elif menu=="Metodologi":
+    st.markdown(
+    """
+    <a id="metodologi"></a>
+    """,
+    unsafe_allow_html=True
+    )
+    
     st.title(
         "Metodologi Penelitian"
         )
@@ -354,8 +410,15 @@ elif menu=="Metodologi":
 elif menu=="Eksplorasi Data":
 
 
+    st.markdown(
+        """
+        <a id="data"></a>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.title(
-    "Eksplorasi Distribusi Data"
+    "Eksplorasi Data"
     )
 
 
@@ -426,6 +489,12 @@ elif menu=="Eksplorasi Data":
 
 elif menu=="Peta ST-SAE":
 
+    st.markdown(
+        """
+        <a id="peta"></a>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.title(
     "Peta Estimasi ST-SAE"
@@ -454,6 +523,8 @@ elif menu=="Peta ST-SAE":
 
     if pilihan=="Pertumbuhan ST-SAE":
         kolom="growth_ST"
+    else:
+        kolom=pilihan
 
     if kecamatan!="Semua":
 
@@ -491,11 +562,11 @@ elif menu=="Peta ST-SAE":
         geo_data=map_df,
         data=map_df,
         columns=[
-            "kode_kecamatan_bps",
+            "kode_kecamatan_kemendagri",
             pilihan
         ],
         key_on=
-        "feature.properties.kode_kecamatan_bps",
+        "feature.properties.kode_kecamatan_kemendagri",
         fill_opacity=0.75,
         line_opacity=0.2,
         legend_name=pilihan
@@ -509,7 +580,8 @@ elif menu=="Peta ST-SAE":
             "nama_kecamatan_bps",
             "kab_kota",
             "EBLUP_ST",
-            "RRMSE_ST"
+            "RRMSE_ST",
+            "tahun"
             ]
         )
     ).add_to(m)
@@ -553,12 +625,16 @@ elif menu=="Ranking Wilayah":
 
 
 elif menu=="Perbandingan Model":
-
-
-    st.title(
-    "Perbandingan Model SAE"
+    st.markdown(
+        """
+        <a id="evaluasi"></a>
+        """,
+        unsafe_allow_html=True
     )
 
+    st.title(
+    "Evaluasi"
+    )
 
     mean_result=pd.DataFrame({
 
@@ -701,7 +777,12 @@ elif menu=="Eksplorasi Kecamatan":
 
 
 elif menu=="Kesimpulan":
-
+    st.markdown(
+        """
+        <a id="kesimpulan"></a>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.title(
     "Kesimpulan Penelitian"
