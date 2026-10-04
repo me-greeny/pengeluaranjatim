@@ -557,7 +557,7 @@ if show_map:
 
         map_df = gdf.merge(
             filtered,
-            on="kode_kecamatan_kemendagri",
+            on="kode_kec",
             how="inner"
         )
 
