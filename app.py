@@ -113,7 +113,23 @@ def load_data():
 
 df,gdf=load_data()
 
+df=df.sort_values(
+    [
+        "kode_kecamatan_bps",
+        "tahun"
+        ]
+    )
 
+
+df["growth_ST"]=(
+    df
+    .groupby(
+        "kode_kecamatan_bps"
+    )
+    ["EBLUP_ST"]
+    .pct_change()
+    *100
+)
 
 # =====================================================
 # NORMALISASI KODE
@@ -209,13 +225,17 @@ menu=st.sidebar.radio(
     "Menu",
     [
     "Beranda",
+    "Metodologi",
     "Eksplorasi Data",
     "Peta ST-SAE",
     "Perbandingan Model",
     "Eksplorasi Kecamatan",
+    "Ranking Wilayah",
+    "Download Data",
     "Kesimpulan"
     ]
 )
+
 
 
 
@@ -297,7 +317,35 @@ if menu=="Beranda":
     """
     )
 
+elif menu=="Metodologi":
+    st.title(
+        "Metodologi Penelitian"
+        )
+    st.markdown(
+    """
+    ## Alur Penelitian
 
+    Data Direct Estimate BPS
+    ↓
+    Auxiliary Variables
+    (Podes dan Citra Satelit)
+    ↓
+    Analisis Spasial
+    (Global Moran's I)
+    ↓
+    Pembentukan Model
+    - ST-SAE
+    ↓
+    EBLUP Estimation
+    ↓
+    Evaluasi:
+    - MSE
+    - RRMSE
+    """
+    )
+    st.image(
+        "data/alur_STSAE.png"
+    )
 # =====================================================
 # EKSPLORASI DATA
 # =====================================================
@@ -399,11 +447,13 @@ elif menu=="Peta ST-SAE":
         "Variabel Peta",
         [
         "EBLUP_ST",
-        "RRMSE_ST"
+        "RRMSE_ST",
+        "Pertumbuhan ST-SAE"
         ]
     )
 
-
+    if pilihan=="Pertumbuhan ST-SAE":
+        kolom="growth_ST"
 
     if kecamatan!="Semua":
 
@@ -452,7 +502,6 @@ elif menu=="Peta ST-SAE":
     ).add_to(m)
 
 
-
     folium.GeoJson(
         map_df,
         tooltip=folium.GeoJsonTooltip(
@@ -465,15 +514,38 @@ elif menu=="Peta ST-SAE":
         )
     ).add_to(m)
 
-
-
     st_folium(
         m,
         width=1000,
         height=650
     )
+    
+    geojson = map_df.to_json()
 
 
+    st.download_button(
+        "Download GeoJSON",
+        geojson,
+        "hasil_ST_SAE.geojson",
+        "application/json"
+    )
+
+elif menu=="Ranking Wilayah":
+    ranking=(filtered.sort_values(
+        "EBLUP_ST",
+        ascending=False
+    )
+    .head(10)
+    )
+    st.dataframe(
+        ranking[
+        [
+        "nama_kecamatan_bps",
+        "kab_kota",
+        "EBLUP_ST"
+        ]
+    ]
+    )
 
 # =====================================================
 # PERBANDINGAN MODEL
@@ -568,6 +640,19 @@ elif menu=="Eksplorasi Kecamatan":
 
         fig=go.Figure()
 
+        for col in [
+            "pengeluaran_mean",
+            "EBLUP_ST"
+        ]:
+
+            fig.add_trace(
+                go.Scatter(
+                x=temp.tahun,
+                y=temp[col],
+                mode="lines+markers",
+                name=col
+                )
+            )
 
         fig.add_trace(
             go.Scatter(
@@ -578,7 +663,6 @@ elif menu=="Eksplorasi Kecamatan":
             )
         )
 
-
         fig.add_trace(
             go.Scatter(
             x=temp.tahun,
@@ -588,19 +672,15 @@ elif menu=="Eksplorasi Kecamatan":
             )
         )
 
-
         fig.update_layout(
             title=
             f"Perkembangan {kecamatan}"
         )
 
-
         st.plotly_chart(
             fig,
             use_container_width=True
         )
-
-
 
         st.dataframe(
             temp[
@@ -654,4 +734,28 @@ elif menu=="Kesimpulan":
     informasi pendukung dalam memahami variasi
     kesejahteraan wilayah.
     """
+    )
+
+elif menu=="Download Data":
+
+    st.title(
+    "Download Hasil Estimasi"
+    )
+
+
+    data_download = filtered.copy()
+
+
+    csv=data_download.to_csv(
+        index=False
+    )
+
+
+    st.download_button(
+        label="⬇️ Download CSV",
+        data=csv,
+        file_name=
+        "hasil_ST_SAE_filtered.csv",
+        mime=
+        "text/csv"
     )
