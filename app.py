@@ -136,8 +136,8 @@ df["growth_ST"]=(
 # =====================================================
 
 
-df["kode_kecamatan_bps"]=(
-    df["kode_kecamatan_bps"]
+df["kode_kecamatan_kemendagri"]=(
+    df["kode_kecamatan_kemendagri"]
     .astype(str)
 )
 
@@ -438,7 +438,7 @@ elif menu=="Peta ST-SAE":
 
     map_df=gdf.merge(
         data,
-        on="kode_kecamatan_bps",
+        on="kode_kecamatan_kemendagri",
         how="inner"
     )
 
@@ -491,11 +491,11 @@ elif menu=="Peta ST-SAE":
         geo_data=map_df,
         data=map_df,
         columns=[
-            "kode_kecamatan_bps",
+            "kode_kecamatan_kemendagri",
             pilihan
         ],
         key_on=
-        "feature.properties.kode_kecamatan_bps",
+        "feature.properties.kode_kecamatan_kemendagri",
         fill_opacity=0.75,
         line_opacity=0.2,
         legend_name=pilihan
