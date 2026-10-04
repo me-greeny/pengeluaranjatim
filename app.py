@@ -28,39 +28,166 @@ st.markdown(
 """
 <style>
 
-.main {
-    background:#FAFAF8;
-}
+/* =====================================
+   FORCE LIGHT MODE STREAMLIT
+===================================== */
 
-#MainMenu {
-    visibility:hidden;
-}
 
-footer {
-    visibility:hidden;
-}
+/* seluruh halaman */
+html, body, [class*="css"] {
 
-[data-testid="stToolbar"] {
-    visibility:hidden;
-}
+    background-color: #FFFFFF !important;
+    color: #111111 !important;
 
-[data-testid="stDecoration"] {
-    display:none;
 }
 
 
+/* container utama */
+[data-testid="stAppViewContainer"] {
+
+    background-color:#FFFFFF !important;
+
+}
+
+
+[data-testid="stMainBlockContainer"] {
+
+    background-color:#FFFFFF !important;
+
+}
+
+
+/* sidebar */
+[data-testid="stSidebar"] {
+
+    background-color:#F8FAFC !important;
+
+}
+
+
+[data-testid="stSidebar"] * {
+
+    color:#111111 !important;
+
+}
+
+
+/* semua teks */
+p, span, label, div, h1, h2, h3, h4, h5 {
+
+    color:#111111 !important;
+
+}
+
+
+/* judul */
+h1,h2,h3 {
+
+    color:#0F172A !important;
+
+}
+
+
+/* markdown */
+.stMarkdown {
+
+    color:#111111 !important;
+
+}
+
+
+/* metric card */
+[data-testid="stMetric"] {
+
+    background:white !important;
+
+    border-radius:15px;
+
+    padding:15px;
+
+    box-shadow:
+    0px 3px 10px rgba(0,0,0,0.08);
+
+}
+
+
+[data-testid="stMetricLabel"] {
+
+    color:#374151 !important;
+
+}
+
+
+[data-testid="stMetricValue"] {
+
+    color:#111827 !important;
+
+}
+
+
+/* dataframe */
+[data-testid="stDataFrame"] {
+
+    background:white !important;
+
+}
+
+
+/* input widget */
+input,
+textarea,
+select {
+
+    background:white !important;
+
+    color:#111111 !important;
+
+}
+
+
+/* selectbox */
+[data-baseweb="select"] {
+
+    background:white !important;
+
+}
+
+
+[data-baseweb="select"] * {
+
+    color:#111111 !important;
+
+}
+
+
+/* tombol */
+button {
+
+    background:white !important;
+
+    color:#111111 !important;
+
+}
+
+
+/* navbar */
 .navbar {
 
     background:white;
+
     padding:15px;
+
     border-radius:15px;
+
     box-shadow:
-    0 3px 10px rgba(0,0,0,0.08);
+    0 3px 10px rgba(0,0,0,0.12);
 
     display:flex;
+
     gap:25px;
 
     position:sticky;
+
     top:0;
 
     z-index:999;
@@ -70,21 +197,40 @@ footer {
 
 .navbar a {
 
-    color:#1D4ED8;
+    color:#1D4ED8 !important;
+
     font-weight:600;
+
     text-decoration:none;
 
 }
 
 
-.card {
+/* hilangkan elemen streamlit */
+#MainMenu {
 
-    background:white;
-    padding:20px;
-    border-radius:15px;
+    visibility:hidden;
 
-    box-shadow:
-    0 3px 10px rgba(0,0,0,0.08);
+}
+
+
+footer {
+
+    visibility:hidden;
+
+}
+
+
+[data-testid="stToolbar"] {
+
+    visibility:hidden;
+
+}
+
+
+[data-testid="stDecoration"] {
+
+    display:none;
 
 }
 
