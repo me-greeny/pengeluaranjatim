@@ -259,14 +259,39 @@ def load_map():
         "data/kecamatan_jatim.zip"
     )
 
-    gdf["kode_kecamatan_kemendagri"] = (
+
+    # pastikan CRS benar
+
+    if gdf.crs is None:
+
+        gdf = gdf.set_crs(
+            "EPSG:4326"
+        )
+
+    else:
+
+        gdf = gdf.to_crs(
+            "EPSG:4326"
+        )
+
+
+    # normalisasi kode kecamatan
+
+    gdf["kode_kec"] = (
         gdf["kode_kec"]
         .astype(str)
         .str.strip()
     )
 
-    return gdf
+    gdf["geometry"] = (
+        gdf.geometry
+        .simplify(
+            tolerance=0.002
+        )
+    )
 
+
+    return gdf
 
 df = load_csv()
 
@@ -572,46 +597,191 @@ if show_map:
             zoom=8
 
 
-        m = folium.Map(
-            location=center,
-            zoom_start=zoom
+        # =====================================================
+# MAP ST-SAE
+# =====================================================
+
+
+st.markdown(
+'<a id="peta"></a>',
+unsafe_allow_html=True
+)
+
+
+st.header(
+    "Peta Estimasi ST-SAE"
+)
+
+show_map = st.checkbox(
+    "Tampilkan Peta",
+    key="show_map"
+)
+
+if show_map:
+    with st.spinner(
+        "Menyiapkan peta..."
+    ):
+        gdf = load_map()
+
+        # join geometry + hasil estimasi
+        map_data = gdf.merge(
+            filtered,
+            left_on="kode_kec",
+            right_on="kode_kecamatan_kemendagri",
+            how="inner"
         )
 
-
-        folium.Choropleth(
-            geo_data=map_df,
-            data=map_df,
-            columns=[
-                "kode_kecamatan_kemendagri",
-                variable
+        map_mode = st.radio(
+            "Mode peta",
+            [
+                "Satu Tahun",
+                "Rata-rata 2018-2025"
             ],
-            key_on=
-            "feature.properties.kode_kecamatan_kemendagri",
-            fill_opacity=0.7,
-            line_opacity=0.2,
-            legend_name=variable
-        ).add_to(m)
+            horizontal=True
+        )
 
+        if map_mode == "Satu Tahun":
+            tahun_map = st.selectbox(
+                "Pilih Tahun Peta",
+                sorted(
+                    df.tahun.unique()
+                )
+            )
+            map_values = map_data[
+                map_data.tahun == tahun_map
+            ].copy()
 
-        folium.GeoJson(
-            map_df,
-            tooltip=folium.GeoJsonTooltip(
-                fields=[
+        else:
+            map_values = (
+                map_data
+                .groupby(
+                    [
+                    "kode_kec",
                     "nama_kecamatan_bps",
                     "kab_kota",
-                    "EBLUP_ST",
-                    "RRMSE_ST"
-                ]
+                    "geometry"
+                    ],
+
+                    as_index=False
+
+                )
+
+                .agg(
+
+                    EBLUP_ST=(
+
+                        "EBLUP_ST",
+
+                        "mean"
+
+                    ),
+
+                    pengeluaran_mean=(
+
+                        "pengeluaran_mean",
+
+                        "mean"
+
+                    ),
+
+                    RRMSE_ST=(
+
+                        "RRMSE_ST",
+
+                        "mean"
+
+                    )
+
+                )
+
             )
-        ).add_to(m)
+
+        if not map_values.empty:
+            map_values = map_values.reset_index()
+
+            fig_map = px.choropleth_map(
+
+                map_values,
+                geojson=
+                map_values.geometry.__geo_interface__,
+
+                locations=
+                "index",
+
+                color=
+                "EBLUP_ST",
+
+                hover_name=
+                "nama_kecamatan_bps",
+
+                hover_data={
+
+                    "kab_kota":True,
+
+                    "pengeluaran_mean":
+                    ":,.0f",
+
+                    "EBLUP_ST":
+                    ":,.0f",
+
+                    "RRMSE_ST":
+                    ":.2f"
+                },
+
+                color_continuous_scale=
+                "Viridis",
+
+                map_style=
+                "carto-positron",
+
+                zoom=6.5,
+                center={
+                    "lat":-7.75,
+                    "lon":112.5
+                }
+            )
+
+            fig_map.update_layout(
+
+                height=650,
+
+                margin={
+
+                    "r":0,
+
+                    "t":30,
+
+                    "l":0,
+
+                    "b":0
+
+                },
+
+                paper_bgcolor="white",
+
+                plot_bgcolor="white"
+
+            )
 
 
-        st_folium(
-            m,
-            width=1000,
-            height=600
-        )
 
+            st.plotly_chart(
+
+                fig_map,
+
+                use_container_width=True
+
+            )
+
+
+        else:
+
+
+            st.warning(
+
+                "Tidak ada data peta."
+
+            )
 
 
 # =====================================================
