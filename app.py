@@ -587,7 +587,7 @@ if show_map:
                 .groupby(
                     [
                     "kode_kec",
-                    "nama_kecamatan_bps",
+                    "kecamata",
                     "kab_kota",
                     "geometry"
                     ],
