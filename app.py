@@ -102,46 +102,52 @@ Kesimpulan
 unsafe_allow_html=True
 )
 
+st.markdown(
+"""
+<style>
 .navbar {
 
-background:white;
+    background:white;
 
-padding:15px;
+    padding:15px;
 
-border-radius:15px;
+    border-radius:15px;
 
-box-shadow:
-0 3px 10px rgba(0,0,0,0.08);
+    box-shadow:
+    0 3px 10px rgba(0,0,0,0.08);
 
-display:flex;
+    display:flex;
 
-gap:25px;
+    gap:25px;
 
-position:sticky;
+    position:sticky;
 
-top:0;
+    top:0;
 
-z-index:999;
+    z-index:999;
 
 }
 
 
 .navbar a {
 
-color:#1D4ED8;
+    color:#1D4ED8;
 
-font-weight:600;
+    font-weight:600;
 
-text-decoration:none;
+    text-decoration:none;
 
 }
 
 
 .navbar a:hover {
 
-color:#0F766E;
+    color:#0F766E;
 
 }
+""",
+unsafe_allow_html=True
+)
 
 # =====================================================
 # LOAD DATA
@@ -301,43 +307,33 @@ menu=st.sidebar.radio(
 # =====================================================
 
 
-if menu=="Beranda":
-
-
-   st.markdown(
-       """
-    <a id="beranda"></a>
-    """,
-    unsafe_allow_html=True
+if menu == "Beranda":
+    st.markdown(
+        """
+        <a id="beranda"></a>
+        """,
+        unsafe_allow_html=True,
     )
 
-
-    st.title(
-    "ST-SAE Jawa Timur"
-    )
-
+    st.title("ST-SAE Jawa Timur")
 
     st.write("")
 
-
-    c1,c2,c3=st.columns(3)
-
+    c1, c2, c3 = st.columns(3)
 
     c1.metric(
         "Jumlah Kecamatan",
-        df.kode_kecamatan_bps.nunique()
+        df.kode_kecamatan_bps.nunique(),
     )
-
 
     c2.metric(
         "Periode",
-        "2018-2025"
+        "2018-2025",
     )
-
 
     c3.metric(
         "Jumlah Observasi",
-        len(df)
+        len(df),
     )
 
 
