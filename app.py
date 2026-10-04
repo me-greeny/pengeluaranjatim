@@ -527,77 +527,7 @@ with col2:
         use_container_width=True
     )
 
-
-
 # =====================================================
-# MAP
-# =====================================================
-
-st.markdown(
-'<a id="peta"></a>',
-unsafe_allow_html=True
-)
-
-st.header("Peta Estimasi ST-SAE")
-
-
-show_map = st.checkbox(
-    "Tampilkan Peta"
-)
-
-
-if show_map:
-
-    with st.spinner(
-        "Memuat peta..."
-    ):
-
-        gdf = load_map()
-
-
-        map_df = gdf.merge(
-            filtered,
-            on="kode_kec",
-            how="inner"
-        )
-
-
-        variable = st.radio(
-            "Variabel",
-            [
-                "EBLUP_ST",
-                "RRMSE_ST",
-                "growth_ST"
-            ],
-            horizontal=True
-        )
-
-
-        if kecamatan != "Semua":
-
-            selected = map_df[
-                map_df.nama_kecamatan_bps ==
-                kecamatan
-            ]
-
-            center = [
-                selected.geometry.centroid.y.iloc[0],
-                selected.geometry.centroid.x.iloc[0]
-            ]
-
-            zoom = 13
-
-        else:
-
-            center=[
-                -7.5,
-                112.5
-            ]
-
-            zoom=8
-
-
-        # =====================================================
 # MAP ST-SAE
 # =====================================================
 
