@@ -289,6 +289,17 @@ def load_map():
             tolerance=0.002
         )
     )
+    if gdf.crs is None:
+
+        gdf = gdf.set_crs(
+            "EPSG:4326"
+        )
+
+    else:
+
+        gdf = gdf.to_crs(
+            "EPSG:4326"
+        )
 
 
     return gdf
@@ -537,7 +548,6 @@ st.markdown(
 unsafe_allow_html=True
 )
 
-
 st.header(
     "Peta Estimasi ST-SAE"
 )
@@ -569,7 +579,7 @@ if map_mode == "Satu Tahun":
         )
     )
     map_values = map_data[
-        map_data.tahun == tahun_map
+        df["tahun"] == tahun_map
     ].copy()
 
 else:
@@ -602,43 +612,106 @@ else:
         )
     )
 
+value_dict = (
+    map_values
+    .set_index(
+        "kode_kecamatan_kemendagri"
+    )
+    ["EBLUP_ST","kab_kota", "nama_kecamatan_bps"]
+    .to_dict()
+)
+gdf_map = gdf.copy()
+
+gdf_map["EBLUP_ST"] = (
+    gdf_map["kode_kec"]
+    .map(value_dict)
+)
+
+rrmse_dict = (
+    map_values
+    .set_index(
+        "kode_kecamatan_kemendagri"
+    )
+    ["RRMSE_ST", "kab_kota", "nama_kecamatan_bps"]
+    .to_dict()
+)
+
+gdf_map["RRMSE_ST"] = (
+    gdf_map["kode_kec"]
+    .map(rrmse_dict)
+)
+
+avg_data = (
+
+    df
+    .groupby(
+        "kode_kecamatan_kemendagri",
+        as_index=False
+    )
+    .agg(
+
+        EBLUP_ST=(
+            "EBLUP_ST",
+            "mean"
+        ),
+
+        RRMSE_ST=(
+            "RRMSE_ST",
+            "mean"
+        ),
+
+        pengeluaran_mean=(
+            "pengeluaran_mean",
+            "mean"
+        )
+
+    )
+
+)
+
+value_dict = (
+    avg_data
+    .set_index(
+        "kode_kecamatan_kemendagri"
+    )
+    ["EBLUP_ST"]
+    .to_dict()
+)
+
+
+gdf_map["EBLUP_ST"] = (
+    gdf_map["kode_kec"]
+    .map(value_dict)
+)
+
 if not map_values.empty:
     map_values = map_values.reset_index()
 
     fig_map = px.choropleth_map(
+    gdf_map,
 
-        map_values,
-        geojson=
-        map_values.geometry.__geo_interface__,
+    geojson=
+    gdf_map.geometry.__geo_interface__,
 
-        locations=
-        "index",
-        color=
-        "EBLUP_ST",
-        hover_name=
-        "nama_kecamatan_bps",
+    locations=
+    gdf_map.index,
 
-        hover_data={
+    color=
+    "EBLUP_ST",
 
-            "kab_kota":True,
+    hover_name=
+    "kab_kota",
 
-            "pengeluaran_mean":
-            ":,.0f",
-            "EBLUP_ST":
-            ":,.0f",
-            "RRMSE_ST":
-            ":.2f"
-        },
-        color_continuous_scale=
-        "Viridis",
-        map_style=
-        "carto-positron",
-        zoom=6.5,
-        center={
-            "lat":-7.75,
-            "lon":112.5
-        }
-    )
+    map_style=
+    "carto-positron",
+
+    center={
+        "lat":-7.75,
+        "lon":112.5
+    },
+
+    zoom=6.5
+)
 
     fig_map.update_layout(
         height=650,
