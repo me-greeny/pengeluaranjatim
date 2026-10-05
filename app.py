@@ -542,176 +542,126 @@ st.header(
     "Peta Estimasi ST-SAE"
 )
 
-show_map = st.checkbox(
-    "Tampilkan Peta",
-    key="show_map"
-)
+gdf = load_map()
 
-if show_map:
-    with st.spinner(
-        "Menyiapkan peta..."
-    ):
-        gdf = load_map()
+    # join geometry + hasil estimasi
+map_data = gdf.merge(
+    filtered,
+    left_on="kode_kec",
+    right_on="kode_kecamatan_kemendagri",
+    how="inner"
+    )
 
-        # join geometry + hasil estimasi
-        map_data = gdf.merge(
-            filtered,
-            left_on="kode_kec",
-            right_on="kode_kecamatan_kemendagri",
-            how="inner"
+map_mode = st.radio(
+    "Mode peta",
+    [
+        "Satu Tahun",
+        "Rata-rata 2018-2025"
+    ],
+    horizontal=True
+    )
+
+if map_mode == "Satu Tahun":
+    tahun_map = st.selectbox(
+        "Pilih Tahun Peta",
+        sorted(
+            df.tahun.unique()
         )
+    )
+    map_values = map_data[
+        map_data.tahun == tahun_map
+    ].copy()
 
-        map_mode = st.radio(
-            "Mode peta",
+else:
+    map_values = (
+        map_data
+        .groupby(
             [
-                "Satu Tahun",
-                "Rata-rata 2018-2025"
+            "kode_kec",
+            "kecamata",
+            "kab_kota",
+            "geometry"
             ],
-            horizontal=True
+            as_index=False
         )
 
-        if map_mode == "Satu Tahun":
-            tahun_map = st.selectbox(
-                "Pilih Tahun Peta",
-                sorted(
-                    df.tahun.unique()
-                )
-            )
-            map_values = map_data[
-                map_data.tahun == tahun_map
-            ].copy()
-
-        else:
-            map_values = (
-                map_data
-                .groupby(
-                    [
-                    "kode_kec",
-                    "kecamata",
-                    "kab_kota",
-                    "geometry"
-                    ],
-
-                    as_index=False
-
-                )
-
-                .agg(
-
-                    EBLUP_ST=(
-
-                        "EBLUP_ST",
-
-                        "mean"
-
-                    ),
-
-                    pengeluaran_mean=(
-
-                        "pengeluaran_mean",
-
-                        "mean"
-
-                    ),
-
-                    RRMSE_ST=(
-
-                        "RRMSE_ST",
-
-                        "mean"
-
-                    )
-
-                )
-
-            )
-
-        if not map_values.empty:
-            map_values = map_values.reset_index()
-
-            fig_map = px.choropleth_map(
-
-                map_values,
-                geojson=
-                map_values.geometry.__geo_interface__,
-
-                locations=
-                "index",
-
-                color=
+        .agg(
+            EBLUP_ST=(
                 "EBLUP_ST",
+                "mean"
+            ),
 
-                hover_name=
-                "nama_kecamatan_bps",
-
-                hover_data={
-
-                    "kab_kota":True,
-
-                    "pengeluaran_mean":
-                    ":,.0f",
-
-                    "EBLUP_ST":
-                    ":,.0f",
-
-                    "RRMSE_ST":
-                    ":.2f"
-                },
-
-                color_continuous_scale=
-                "Viridis",
-
-                map_style=
-                "carto-positron",
-
-                zoom=6.5,
-                center={
-                    "lat":-7.75,
-                    "lon":112.5
-                }
+            pengeluaran_mean=(
+                "pengeluaran_mean",
+                "mean"
+            ),
+            RRMSE_ST=(
+                "RRMSE_ST",
+                "mean"
             )
+        )
+    )
 
-            fig_map.update_layout(
+if not map_values.empty:
+    map_values = map_values.reset_index()
 
-                height=650,
+    fig_map = px.choropleth_map(
 
-                margin={
+        map_values,
+        geojson=
+        map_values.geometry.__geo_interface__,
 
-                    "r":0,
+        locations=
+        "index",
+        color=
+        "EBLUP_ST",
+        hover_name=
+        "nama_kecamatan_bps",
 
-                    "t":30,
+        hover_data={
 
-                    "l":0,
+            "kab_kota":True,
 
-                    "b":0
+            "pengeluaran_mean":
+            ":,.0f",
+            "EBLUP_ST":
+            ":,.0f",
+            "RRMSE_ST":
+            ":.2f"
+        },
+        color_continuous_scale=
+        "Viridis",
+        map_style=
+        "carto-positron",
+        zoom=6.5,
+        center={
+            "lat":-7.75,
+            "lon":112.5
+        }
+    )
 
-                },
+    fig_map.update_layout(
+        height=650,
+        margin={
+            "r":0,
+            "t":30,
+            "l":0,
+            "b":0
+        },
+        paper_bgcolor="white",
+        plot_bgcolor="white"
+    )
 
-                paper_bgcolor="white",
-
-                plot_bgcolor="white"
-
-            )
-
-
-
-            st.plotly_chart(
-
-                fig_map,
-
-                use_container_width=True
-
-            )
-
-
-        else:
+    st.plotly_chart(
+        fig_map,
+        use_container_width=True
+        )
 
 
-            st.warning(
-
-                "Tidak ada data peta."
-
-            )
+else:
+    st.warning(
+        "Tidak ada data peta."
+    )
 
 
 # =====================================================
